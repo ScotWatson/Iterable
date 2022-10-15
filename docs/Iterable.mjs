@@ -595,6 +595,7 @@ export function equal(args, arg2) {
       }
       A = args;
       B = arg2;
+      equalityFn = compareByValue;
     } else if (ErrorHandling.isBareObject(args)) {
       if (!(Object.hasOwn(args, "A"))) {
         throw new ErrorHandling.AnticipatedError({
@@ -622,6 +623,8 @@ export function equal(args, arg2) {
       }
       if (Object.hasOwn(args, "equalityFn")) {
         equalityFn = args.equalityFn;
+      } else {
+        equalityFn = compareByValue;
       }
       A = args.A;
       B = args.B;
@@ -635,22 +638,12 @@ export function equal(args, arg2) {
     const iterB = B[Symbol.iterator]();
     let resultA = iterA.next();
     let resultB = iterB.next();
-    if (equalityFn) {
-      while (!(resultA.done) && !(resultB.done)) {
-        if (!equalityFn(resultA.value, resultB.value)) {
-          return false;
-        }
-        resultA = iterA.next();
-        resultB = iterB.next();
+    while (!(resultA.done) && !(resultB.done)) {
+      if (!equalityFn(resultA.value, resultB.value)) {
+        return false;
       }
-    } else {
-      while (!(resultA.done) && !(resultB.done)) {
-        if (resultA.value !== resultB.value))) {
-          return false;
-        }
-        resultA = iterA.next();
-        resultB = iterB.next();
-      }
+      resultA = iterA.next();
+      resultB = iterB.next();
     }
     if (!(resultA.done) || !(resultB.done)) {
       return false;
@@ -666,4 +659,8 @@ export function equal(args, arg2) {
       });
     }
   }
+}
+
+function compareByValue(A, B) {
+  return (A.valueOf() === B.valueOf());
 }
