@@ -580,3 +580,90 @@ export function some(args) {
     }
   }
 }
+
+export function equal(args, arg2) {
+  try {
+    let A;
+    let B;
+    let equalityFn;
+    if (Object.hasOwn(args, Symbol.iterator)) {
+      if (!(Object.hasOwn(arg2, Symbol.iterator))) {
+        throw new ErrorHandling.AnticipatedError({
+          functionName: "equal",
+          message: "Second argument must be iterable.",
+        });
+      }
+      A = args;
+      B = arg2;
+    } else if (ErrorHandling.isBareObject(args)) {
+      if (!(Object.hasOwn(args, "A"))) {
+        throw new ErrorHandling.AnticipatedError({
+          functionName: "equal",
+          message: "Argument \"A\" is required.",
+        });
+      }
+      if (Object.hasOwn(args.A, Symbol.iterator)) {
+        throw new ErrorHandling.AnticipatedError({
+          functionName: "equal",
+          message: "Argument \"A\" must be iterable.",
+        });
+      }
+      if (!(Object.hasOwn(args, "B"))) {
+        throw new ErrorHandling.AnticipatedError({
+          functionName: "equal",
+          message: "Argument \"B\" is required.",
+        });
+      }
+      if (Object.hasOwn(args.B, Symbol.iterator)) {
+        throw new ErrorHandling.AnticipatedError({
+          functionName: "equal",
+          message: "Argument \"B\" must be iterable.",
+        });
+      }
+      if (Object.hasOwn(args, "equalityFn")) {
+        equalityFn = args.equalityFn;
+      }
+      A = args.A;
+      B = args.B;
+    } else {
+      throw new ErrorHandling.AnticipatedError({
+        functionName: "equal",
+        message: "Invalid Arguments.",
+      });
+    }
+    const iterA = A[Symbol.iterator]();
+    const iterB = B[Symbol.iterator]();
+    let resultA = iterA.next();
+    let resultB = iterB.next();
+    if (equalityFn) {
+      while (!(resultA.done) && !(resultB.done)) {
+        if (!equalityFn(resultA.value, resultB.value)) {
+          return false;
+        }
+        resultA = iterA.next();
+        resultB = iterB.next();
+      }
+    } else {
+      while (!(resultA.done) && !(resultB.done)) {
+        if (resultA.value !== resultB.value))) {
+          return false;
+        }
+        resultA = iterA.next();
+        resultB = iterB.next();
+      }
+    }
+    if (!(resultA.done) || !(resultB.done)) {
+      return false;
+    }
+    return true;
+  } catch (e) {
+    if (e instanceof ErrorHandling.AnticipatedError) {
+      throw e;
+    } else {
+      throw new ErrorHandling.UnanticipatedError({
+        functionName: "equal",
+        cause: e,
+      });
+    }
+  }
+}
